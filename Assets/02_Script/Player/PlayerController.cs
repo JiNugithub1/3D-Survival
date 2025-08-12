@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,7 +10,6 @@ public class PlayerController : MonoBehaviour
     private Vector2 curMovementInput;
     public float jumpPower;
     public LayerMask groundLayerMask;
-    private Rigidbody _rigidbody;
 
     [Header("Look")]
     public Transform cameraContainer;
@@ -18,6 +18,13 @@ public class PlayerController : MonoBehaviour
     private float camCurXRot;
     public float lookSensitivity;
     private Vector2 mouseDelta;
+    public bool canLook = true;
+
+    [Header("JumpPad")]
+    public float jumpPadForce = 15f;
+
+    public Action inventory;
+    private Rigidbody _rigidbody;
 
     private void Awake()
     {
@@ -35,7 +42,10 @@ public class PlayerController : MonoBehaviour
     }
     private void LateUpdate()
     {
-        CameraLook();
+        if (canLook)
+        {
+            CameraLook();
+        }
     }
 
     void Move()
@@ -97,5 +107,36 @@ public class PlayerController : MonoBehaviour
             }
         }
         return false;
+    }
+
+    public void OnInventory(InputAction.CallbackContext context)
+    {
+        if (context.phase == InputActionPhase.Started)
+        {
+            inventory?.Invoke();
+            ToggleCursor();
+        }
+    }
+
+    void ToggleCursor()
+    {
+        bool toggle = Cursor.lockState == CursorLockMode.Locked;
+        Cursor.lockState = toggle ? CursorLockMode.None : CursorLockMode.Locked;
+        canLook = !toggle;
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+
+        if (collision.gameObject.CompareTag("JumpPad"))
+        {
+            JumpPadBoost();
+        }
+    }
+    void JumpPadBoost()
+    {
+        // 현재 바라보는 방향 + 위쪽 방향으로 힘을 줌
+        Vector3 boostDir = (transform.forward + Vector3.up).normalized;
+        _rigidbody.velocity = Vector3.zero; // 기존 속도 초기화
+        _rigidbody.AddForce(boostDir * jumpPadForce, ForceMode.Impulse);
     }
 }

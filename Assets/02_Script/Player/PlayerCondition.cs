@@ -41,10 +41,30 @@ public class PlayerCondition : MonoBehaviour, IDamagable
     {
         hunger.Add(amout);
     }
+    public void SpeedUp(float amount, float duration) // 코루틴을 호출하여 아이템의 스피드를 올려준다.
+    {
+        StartCoroutine(SpeedUpCoroutine(amount, duration));
+    }
+    private IEnumerator SpeedUpCoroutine(float amount, float duration)
+    {
+        PlayerController controller = GetComponent<PlayerController>();
+        if (controller == null)
+            yield break;
+
+        // 속도 증가
+        controller.moveSpeed += amount;
+        Debug.Log(controller.moveSpeed);
+
+        yield return new WaitForSeconds(duration);
+
+        // 속도 원래대로 복구
+        controller.moveSpeed -= amount;
+    }
     public void Die()
     {
         Debug.Log("Die");
     }
+    
 
     public void TakePhysicalDamage(int damage)
     {
